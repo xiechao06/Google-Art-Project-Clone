@@ -7,6 +7,7 @@
   <title>Google Art Project</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css?family=Roboto:100" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-cookie/2.1.4/js.cookie.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
   <style>
   * {margin:0;padding:0;box-sizing:border-box} html{height:100%;width:100%;}
@@ -24,21 +25,27 @@
   <p>Art Project from <a href="https://www.google.com/culturalinstitute/">Google Cultural Institute</a>
 </div>
 <script>
-	var arts = JSON.parse(sessionStorage.getItem('arts'));
+	var arts = Cookies.get('arts');
 
   (function (cb) {
     if (arts) {
-      cb(arts)
+      cb(JSON.parse(arts));
     } else {
       $.getJSON( "https://www.gstatic.com/culturalinstitute/tabext/imax.json", function(data) {
+        const artsIndexSet = new Set();
+        while (artsIndexSet.size < 5) {
+          const idx = Math.floor(Math.random() * data.length);
+          artsIndexSet.add(idx);
+        }
+        arts = Array.from(artsIndexSet).map(idx => data[idx]);
+        Cookies.set('arts', JSON.stringify(arts), { expire: 1});
         // expires in one day
-        sessionStorage.setItem("arts", JSON.stringify(data));
-        cb(data);
+        cb(arts);
       });
     }
   })(function (arts) {
-    console.log(arts);
-    var art = arts[Math.floor(Math.random() * arts.length) + 1];
+    console.log("art collections: ", arts);
+    var art = arts[Math.floor(Math.random() * arts.length)];
     console.log("selected art: ", art);
 	  $("body").css("background-image","url("+art.image+"=s1200)");
 	  $("h1 a").text(art.title).attr("href", "https://www.google.com/culturalinstitute/" + art.link);
